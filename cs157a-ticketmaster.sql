@@ -205,3 +205,49 @@ CREATE INDEX idx_event_date ON `Event`(EventDate);
 -- Improves performance when searching for Event by date
 -- Example:
 SELECT * FROM `Event` WHERE EventDate BETWEEN '2025-12-01' AND '2025-12-31';
+
+-- COMPOSITE KEY TESTS FOR WEAK ENTITIES
+--TEST 1: Try to insert DUPLICATE waitlist entry (SHOULD FAIL)
+-- Customer 1 is already on waitlist for Event 1
+-- Expected: ERROR
+INSERT INTO Waitlist (EventID, CustomerID, Status, DateAdded)
+VALUES (1, 1, 'Waiting', '2015-11-08');
+
+-- TEST 2: Insert SAME customer on DIFFERENT event waitlist (SHOULD SUCCEED)
+-- Customer 1 can be on waitlist for Event 2
+INSERT INTO Waitlist (EventID, CustomerID, Status, DateAdded) 
+VALUES (2, 1, 'Waiting', '2025-11-08');
+
+SELECT 'Waitlist entries for Customer 1:' AS Test;
+SELECT * FROM Waitlist WHERE CustomerID = 1;
+
+-- TEST 3: Try to insert DUPLICATE review (SHOULD FAIL)
+-- Customer 1 already reviewed Event 1
+-- Expected: ERROR 
+INSERT INTO Review (Stars, Comment, CustomerID, EventID) 
+VALUES (3, "Changed my mind", 1, 1);
+
+-- TEST 4: Insert SAME customer reviewing DIFFERENT event (SHOULD SUCCEED)
+-- Customer 1 can review Event 2
+INSERT INTO Review (Stars, Comment, CustomerID, EventID) 
+VALUES (4, "Rock Concert was amazing!", 1, 2);
+
+SELECT 'Review entries for Customer 1:' AS Test;
+SELECT * FROM Review WHERE CustomerID = 1;
+
+-- Show data BEFORE deletion
+SELECT 'Waitlist entries for Event 1 BEFORE deletion:' AS Test;
+SELECT * FROM Waitlist WHERE EventID = 1;
+
+SELECT 'Review entries for Event 1 BEFORE deletion:' AS Test;
+SELECT * FROM Review WHERE EventID = 1;
+
+-- Delete Event 1 (should CASCADE delete related waitlist entries and reviews)
+DELETE FROM `Event` WHERE EventID = 1;
+
+-- Show data AFTER deletion (should be empty)
+SELECT 'Waitlist entries for Event 1 AFTER deletion (should be empty):' AS Test;
+SELECT * FROM Waitlist WHERE EventID = 1;
+
+SELECT 'Review entries for Event 1 AFTER deletion (should be empty):' AS Test;
+SELECT * FROM Review WHERE EventID = 1;
