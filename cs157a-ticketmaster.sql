@@ -4,6 +4,7 @@ CREATE DATABASE ticketMaster;
 
 USE ticketMaster;
 
+-- CUSTOMER
 CREATE TABLE Customer (
 	CustomerID INT PRIMARY KEY AUTO_INCREMENT,
 	FirstName VARCHAR(50) NOT NULL,
@@ -13,6 +14,7 @@ CREATE TABLE Customer (
 	BirthDate DATE NOT NULL
 );
 
+-- VENUE
 CREATE TABLE Venue (
 	VenueID INT PRIMARY KEY AUTO_INCREMENT,
 	VenueName VARCHAR(100) NOT NULL,
@@ -22,6 +24,7 @@ CREATE TABLE Venue (
 	Capacity INT
 );
 
+-- EVENT COORDINATOR
 CREATE TABLE EventCoordinator (
 	CoordinatorID INT PRIMARY KEY AUTO_INCREMENT,
 	FirstName VARCHAR(50) NOT NULL,
@@ -31,6 +34,7 @@ CREATE TABLE EventCoordinator (
 	BirthDate DATE
 ); 
 
+-- EVENT
 CREATE TABLE `Event` (
 	EventID INT PRIMARY KEY AUTO_INCREMENT,
 	CoordinatorID INT NOT NULL,
@@ -44,6 +48,7 @@ CREATE TABLE `Event` (
 	FOREIGN KEY (VenueID) REFERENCES Venue(VenueID)
 ); 
 
+-- EVENTCOORDINATOREVENT (link table)
 CREATE TABLE EventCoordinatorEvent (
 	EventCoordinatorEventID INT PRIMARY KEY AUTO_INCREMENT,
     CoordinatorID INTEGER NOT NULL,
@@ -52,6 +57,7 @@ CREATE TABLE EventCoordinatorEvent (
     FOREIGN KEY (EventID) REFERENCES Event(EventID)
 );
 
+-- TICKET
 CREATE TABLE Ticket (
 	TicketID INT PRIMARY KEY AUTO_INCREMENT,
 	EventID INT NOT NULL,
@@ -62,6 +68,7 @@ CREATE TABLE Ticket (
 	FOREIGN KEY (EventID) REFERENCES Event(EventID)
 ); 
 
+-- ORDER
 CREATE TABLE `Order` (
 	OrderID INTEGER PRIMARY KEY AUTO_INCREMENT,
     PurchaseDate DATE NOT NULL,
@@ -69,6 +76,7 @@ CREATE TABLE `Order` (
     FOREIGN KEY (CustomerID) REFERENCES Customer(CustomerID)
 );
 
+-- ORDER ITEM
 CREATE TABLE OrderItem (
 	OrderItemID INTEGER PRIMARY KEY AUTO_INCREMENT,
     ItemDescription VARCHAR(200) NOT NULL,
@@ -79,6 +87,7 @@ CREATE TABLE OrderItem (
 	FOREIGN KEY (TicketID) REFERENCES Ticket(TicketID)
 );
 
+-- WAITLIST (weak entity)
 CREATE TABLE Waitlist (
 	EventID INT NOT NULL,
 	CustomerID INT NOT NULL,
@@ -142,11 +151,14 @@ VALUES
 (5, "Had a Great Time", 2, 1),
 (2, "Too loud!", 3, 2);
 
+-- View all orders along with the customer who made each purchase
 SELECT OrderID, PurchaseDate, FirstName, LastName
 FROM `Order` O
 JOIN Customer C
 ON O.CustomerID = C.CustomerID;
 
+-- View detailed order items, including ticket and event info
+-- Shows which seat and event each order item corresponds to
 SELECT O.OrderID, OI.ItemDescription, OI.Price, T.SeatIdentifier, E.EventName
 FROM OrderItem OI
 JOIN `Order` O ON OI.OrderID = O.OrderID
@@ -154,6 +166,8 @@ JOIN Ticket T ON OI.TicketID = T.TicketID
 JOIN Event E ON T.EventID = E.EventID
 ORDER BY O.OrderID, T.SeatIdentifier;
 
+-- SUBQUERY involves an inner query and an outer query (a SELECT statement is inside another statement)
+-- Selects the name, date, start time and end time from the event where the venue has a capacity greater than 200
 SELECT EventName, EventDate, StartTime, EndTime
 FROM Event
 WHERE VenueID IN (
@@ -162,12 +176,16 @@ WHERE VenueID IN (
     WHERE Capacity > 200
     );
     
+-- UPDATE statement only changes already existing elements in the tables
+-- Updates phone number of event coordinator with coordinatorID 2
 UPDATE EventCoordinator
 SET PhoneNumber = '916-533-6428'
 WHERE CoordinatorID = 2;
 
 SELECT * FROM EventCoordinator;
 
+-- The trigger fires before the update actually happens
+-- It sees that you tried to set the Status to 'Cancelled', but instead changes the new value to 'Available'.
 DELIMITER //
 
 CREATE TRIGGER trg_ticket_cancel_to_available
@@ -181,3 +199,9 @@ END IF;
 END //
 
 DELIMITER ;
+
+-- to speed up event date searches
+CREATE INDEX idx_event_date ON `Event`(EventDate);
+-- Improves performance when searching for Event by date
+-- Example:
+SELECT * FROM `Event` WHERE EventDate BETWEEN '2025-12-01' AND '2025-12-31';
