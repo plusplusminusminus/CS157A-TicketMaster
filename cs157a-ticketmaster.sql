@@ -224,6 +224,19 @@ END //
 
 DELIMITER ;
 
+-- Test Trigger
+INSERT INTO Ticket (Price, SeatIdentifier, Status, EventID) VALUES
+(75.00, 'A-04', 'Reserved', 1);
+
+SELECT * FROM Ticket WHERE TicketID = 4;
+
+UPDATE Ticket 
+SET Status = 'Cancelled' 
+WHERE TicketID = 4;
+
+-- Status should be 'Available'
+SELECT * FROM Ticket WHERE TicketID = 4;
+
 -- to speed up event date searches
 CREATE INDEX idx_event_date ON `Event`(EventDate);
 -- Improves performance when searching for Event by date
