@@ -170,14 +170,14 @@ SELECT * FROM Review;
 
 SELECT * FROM Waitlist;
 
--- View all orders along with the customer who made each purchase
+-- INNER JOIN retrieves all orders along with the customer information for each purchase
 SELECT OrderID, PurchaseDate, FirstName, LastName
 FROM `Order` O
 JOIN Customer c
 ON O.CustomerID = C.CustomerID;
 
--- View detailed order items, including ticket and event info
--- Shows which seat and event each order item corresponds to
+-- INNER JOIN across multiple tables retrieves detailed order items,
+-- including ticket details and the corresponding event information
 SELECT O.OrderID, OI.ItemDescription, OI.Price, T.SeatIdentifier, E.EventName
 FROM OrderItem OI
 JOIN `Order` O ON OI.OrderID = O.OrderID
@@ -185,10 +185,23 @@ JOIN Ticket T ON OI.TicketID = T.TicketID
 JOIN Event E ON T.EventID = E.EventID
 ORDER BY O.OrderID, T.SeatIdentifier;
 
--- Shows all customers even those who haven't placed an order yet
+-- OUTER JOIN lists all customers, including those who have not placed any orders
 SELECT c.CustomerID, c.FirstName, c.LastName, o.OrderID, o.PurchaseDate
 FROM Customer c
 LEFT JOIN `Order` o ON c.CustomerID = o.CustomerID;
+
+-- Aggregate query using SUM() and COUNT() to calculate total revenue and number of tickets sold per event
+-- Uses HAVING filters out events with no sales
+SELECT
+	E.EventName,
+    SUM(OI.Price) AS TotalRevenue,
+    COUNT(OI.OrderItemID) AS TicketsSold
+FROM OrderItem AS OI
+JOIN Ticket T ON OI.TicketID = T.TicketID
+JOIN Event E ON T.EventID = E.EventID
+GROUP BY E.EventName
+HAVING SUM(OI.Price) > 0
+ORDER BY TotalRevenue DESC;
 
 -- SUBQUERY involves an inner query and an outer query (a SELECT statement is inside another statement)
 -- Selects the name, date, start time and end time from the event where the venue has a capacity greater than 200
@@ -223,6 +236,21 @@ END IF;
 END //
 
 DELIMITER ;
+
+DELIMITER ;
+
+-- Test Trigger
+INSERT INTO Ticket (Price, SeatIdentifier, Status, EventID) VALUES
+(75.00, 'A-04', 'Reserved', 1);
+
+SELECT * FROM Ticket WHERE TicketID = 4;
+
+UPDATE Ticket 
+SET Status = 'Cancelled' 
+WHERE TicketID = 4;
+
+-- Status should be 'Available'
+SELECT * FROM Ticket WHERE TicketID = 4;
 
 -- to speed up event date searches
 CREATE INDEX idx_event_date ON `Event`(EventDate);
