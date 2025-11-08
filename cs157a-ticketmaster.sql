@@ -150,30 +150,30 @@ VALUES
 (5, "Had a Great Time", 2, 1),
 (2, "Too loud!", 3, 2);
 
--- SELECT * FROM Customer;
+SELECT * FROM Customer;
 
--- SELECT * FROM EventCoordinator;
+SELECT * FROM EventCoordinator;
 
--- SELECT * FROM Venue;
+SELECT * FROM Venue;
 
--- SELECT * FROM `Event`;
+SELECT * FROM `Event`;
 
--- SELECT * FROM EventCoordinatorEvent;
+SELECT * FROM EventCoordinatorEvent;
 
--- SELECT * FROM Ticket;
+SELECT * FROM Ticket;
 
--- SELECT * FROM `Order`;
+SELECT * FROM `Order`;
 
--- SELECT * FROM OrderItem;
+SELECT * FROM OrderItem;
 
--- SELECT * FROM Review;
+SELECT * FROM Review;
 
--- SELECT * FROM Waitlist;
+SELECT * FROM Waitlist;
 
 -- View all orders along with the customer who made each purchase
 SELECT OrderID, PurchaseDate, FirstName, LastName
 FROM `Order` O
-JOIN Customer C
+JOIN Customer c
 ON O.CustomerID = C.CustomerID;
 
 -- View detailed order items, including ticket and event info
